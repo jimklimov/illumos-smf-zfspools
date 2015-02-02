@@ -1,0 +1,37 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+<service_bundle type='manifest' name='export'>
+  <service name='network/iscsi/initiator-dcpool' type='service' version='0'>
+    <create_default_instance enabled='false'/>
+    <single_instance/>
+    <dependency name='loopback' grouping='require_any' restart_on='error' type='service'>
+      <service_fmri value='svc:/network/loopback'/>
+    </dependency>
+    <dependency name='mus' grouping='require_any' restart_on='error' type='service'>
+      <service_fmri value='svc:/milestone/multi-user-server:default'/>
+    </dependency>
+    <exec_method name='start' type='method' exec='/lib/svc/method/iscsi-initiator-dcpool %m' timeout_seconds='600'>
+      <method_context>
+        <method_credential user='root' group='root' privileges='basic,sys_devices,sys_mount'/>
+      </method_context>
+    </exec_method>
+    <exec_method name='stop' type='method' exec='/lib/svc/method/iscsi-initiator-dcpool %m' timeout_seconds='600'>
+      <method_context>
+        <method_credential user='root' group='root' privileges='basic,sys_devices,sys_mount'/>
+      </method_context>
+    </exec_method>
+    <property_group name='dependents' type='framework'>
+      <property name='iscsi-initiator_multi-user' type='fmri'/>
+      <property name='iscsi-mount-dcpool' type='fmri'/>
+    </property_group>
+    <stability value='Evolving'/>
+    <template>
+      <common_name>
+        <loctext xml:lang='C'>iSCSI initiator daemon for dcpool</loctext>
+      </common_name>
+      <documentation>
+        <manpage title='iscsi' section='7D' manpath='/usr/share/man'/>
+      </documentation>
+    </template>
+  </service>
+</service_bundle>

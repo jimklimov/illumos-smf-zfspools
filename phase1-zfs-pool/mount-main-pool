@@ -1,0 +1,110 @@
+#!/sbin/sh
+
+### This method script wraps the import of a ZFS pool as an SMF service
+### Copyright (C) 2010-2013 by Jim Klimov
+
+POOL="pool"
+TESTMNT="$POOL/tmp"
+
+### Protect the pool's base mountpoint from trash (while the pool
+### is exported!!!) with:
+# /bin/chmod S+ci /${POOL}
+### Create the test dataset with name mathching the mountpoint:
+# zfs create -o canmount=on -o mountpoint=/${TESTMNT} ${TESTMNT}
+
+### Pool import may be off-set to avoid conflicts
+POOL_ALTROOT="/"
+### The "-N" option to skip auto-mounting and -R for altrool are enforced
+POOL_OPTIONS=""
+
+DELAY=600
+set_poolfiles() {
+	DELAY_FILE="/etc/zfs/delay.${POOL}"
+	LOCK_USER="/etc/zfs/noimport-${POOL}"
+	LOCK_AUTO="/etc/zfs/.autolock.${POOL}"
+	NOMOUNT_FILE="/etc/zfs/noautomount-${POOL}"
+}
+
+### TODO: Include the SMF logic if SMF_FMRI is defined, and use svcprop
+### to override the preset variables above from SMF; POOL and TESTMNT
+### must both be defined, others optional (would be guessed as above).
+
+set_poolfiles
+
+case "$1" in
+	start)
+		if [ ! -d ${POOL_ALTROOT}/${TESTMNT} ]; then
+			if [ x"$2" != xnow -a -s "$LOCK_AUTO" ]; then
+				echo "ERROR: Earlier attempt to import '${POOL}' failed. Remove the lock-file '$LOCK_AUTO' to retry!" >&2
+				exit 95
+			fi
+
+			if [ x"$2" != xnow -a -f ${DELAY_FILE} ]; then
+				D="`head -1 ${DELAY_FILE}`"
+				[ "$D" -gt 0 ] 2>/dev/null && DELAY="$D"
+				echo "`date`: Delay requested... ${DELAY}sec"
+				sleep ${DELAY}
+				echo "`date`: Done sleeping"
+			fi
+
+			if [ x"$2" != xnow -a -f ${LOCK_USER} ]; then
+				echo "`date`: '${LOCK_USER}' block-file reappeared. Aborting."
+				exit 0
+			fi
+
+			if [ x"$2" != xnow -a -d ${POOL_ALTROOT}/${TESTMNT} ]; then
+				echo "`date`: pool '${POOL}' seems already mounted. Aborting."
+				exit 0
+			fi
+
+			touch "$LOCK_AUTO"
+			echo "=== Importing '${POOL}'..."
+			time zpool import -R ${POOL_ALTROOT} -N $POOL_OPTIONS ${POOL}
+			RET=$?
+			
+			if [ x"$RET" = x0 ]; then
+				echo "=== Some stats ..."
+				time zpool list ${POOL} && \
+				time zpool iostat -v ${POOL} && \
+				time zpool status -v ${POOL} && \
+				if [ -f ${NOMOUNT_FILE} ]; then
+					echo "=== Not mounting ALL of '$POOL' datasets due to '$NOMOUNT_FILE'"
+					echo "=== Mounting root DS only:"
+					time zfs mount ${POOL}
+					echo "=== Try to mount the test dataset '$TESTMNT':"
+					time zfs mount ${TESTMNT}
+				else
+					echo "=== zfs mount -a ..."
+					time zfs mount -a
+				fi
+			fi
+
+			rm -f "$LOCK_AUTO"
+			exit ${RET}
+		fi
+		;;
+	stop)
+		if [ -d ${POOL_ALTROOT}/${TESTMNT} -o x"$2" = xnow ]; then
+			time zpool export ${POOL} || \
+			( RET=1; while [ $RET != 0 ]; do
+			  echo "=== `date`: Forcefully exporting '$POOL'" >&2
+			  time zpool export -f ${POOL}
+			  RET=$?
+			  echo "=== `date`: Result: $RET"
+			  sleep 1
+			done )
+		fi
+		;;
+	status)
+		echo "=== Status for pool '$POOL' with test dataset '$TESTMNT':"
+		[ -d ${POOL_ALTROOT}/${TESTMNT} ] && M=YES || M=NO
+		echo "=== Imported and mounted = $M"
+
+		echo "=== ZFS info:"
+		time zpool list ${POOL} && \
+		time zpool iostat -v ${POOL} && \
+		time zpool status -v ${POOL} && \
+		df -k ${POOL}
+		;;
+esac
+

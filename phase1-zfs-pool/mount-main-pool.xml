@@ -1,0 +1,34 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+<service_bundle type='manifest' name='export'>
+  <service name='network/iscsi/mount-main-pool' type='service' version='0'>
+    <dependency name='fs-local' grouping='require_all' restart_on='none' type='service'>
+      <service_fmri value='svc:/system/filesystem/local'/>
+    </dependency>
+    <dependency name='noimport-file' grouping='exclude_all' restart_on='refresh' type='path'>
+      <service_fmri value='file://localhost/etc/zfs/noimport-pool'/>
+    </dependency>
+    <dependency name='noimport-file-auto' grouping='exclude_all' restart_on='none' type='path'>
+      <service_fmri value='file://localhost/etc/zfs/.autolock.pool'/>
+    </dependency>
+    <dependent name='mainpool_zones' grouping='require_all' restart_on='restart'>
+	<service_fmri value='svc:/system/zones'/>
+    </dependent>
+    <dependent name='mainpool_smb_server' grouping='require_all' restart_on='restart'>
+	<service_fmri value='svc:/network/smb/server'/>
+    </dependent>
+    <instance name='default' enabled='false'>
+      <exec_method name='start' type='method' exec='/lib/svc/method/mount-main-pool %m' timeout_seconds='0'/>
+      <exec_method name='stop' type='method' exec='/lib/svc/method/mount-main-pool %m' timeout_seconds='600'/>
+      <property_group name='startd' type='framework'>
+        <propval name='duration' type='astring' value='transient'/>
+      </property_group>
+      <template>
+        <common_name>
+          <loctext xml:lang='C'>import &apos;main data pool&apos; (local)</loctext>
+        </common_name>
+      </template>
+    </instance>
+    <stability value='Unstable'/>
+  </service>
+</service_bundle>

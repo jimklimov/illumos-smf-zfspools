@@ -1,0 +1,18 @@
+#!/bin/sh
+
+ZVOL=/dev/zvol/rdsk/pool/dcpool
+GUID=600144f09844cf0000004d8376ae0002
+
+case "$1" in
+	start)
+		sbdadm import-lu "$ZVOL" && sleep 3
+		sbdadm list-lu | grep "$ZVOL"
+		;;
+	stop)
+		sbdadm delete-lu -k "$GUID" && sleep 3
+		sbdadm list-lu | grep "$ZVOL"
+		[ $? = 0 ] && exit 1 || exit 0
+		;;
+	*) exit 1 ;;
+esac
+	

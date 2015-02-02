@@ -1,0 +1,8 @@
+#!/bin/sh
+
+case "$1" in
+	start) /lib/svc/method/iscsi-initiator "$@" && sleep 10 ;;
+	stop)  sleep 10 && /lib/svc/method/iscsi-initiator "$@" ;;
+	*) /lib/svc/method/iscsi-initiator "$@" ;;
+esac
+	

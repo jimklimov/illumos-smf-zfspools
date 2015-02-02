@@ -1,0 +1,28 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+<service_bundle type='manifest' name='export'>
+  <service name='network/iscsi/mount-dcpool' type='service' version='0'>
+    <dependency name='loopback' grouping='require_all' restart_on='none' type='service'>
+      <service_fmri value='svc:/network/loopback'/>
+    </dependency>
+    <dependency name='initiator-dcpool' grouping='require_all' restart_on='restart' type='service'>
+      <service_fmri value='svc:/network/iscsi/initiator-dcpool:default'/>
+    </dependency>
+    <dependency name='noimport-file' grouping='exclude_all' restart_on='refresh' type='path'>
+      <service_fmri value='file://localhost/etc/zfs/noimport-dcpool'/>
+    </dependency>
+    <instance name='default' enabled='false'>
+      <exec_method name='start' type='method' exec='/lib/svc/method/iscsi-mount-dcpool %m' timeout_seconds='0'/>
+      <exec_method name='stop' type='method' exec='/lib/svc/method/iscsi-mount-dcpool %m' timeout_seconds='600'/>
+      <property_group name='startd' type='framework'>
+        <propval name='duration' type='astring' value='transient'/>
+      </property_group>
+      <template>
+        <common_name>
+          <loctext xml:lang='C'>import &apos;dcpool&apos; over iscsi</loctext>
+        </common_name>
+      </template>
+    </instance>
+    <stability value='Unstable'/>
+  </service>
+</service_bundle>

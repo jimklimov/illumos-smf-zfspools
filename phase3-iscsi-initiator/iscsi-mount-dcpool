@@ -1,0 +1,33 @@
+#!/bin/sh
+
+DELAY=600
+
+case "$1" in
+	start)
+		if [ -f /etc/zfs/delay.dcpool ]; then
+			D="`head -1 /etc/zfs/delay.dcpool`"
+			[ "$D" -gt 0 ] 2>/dev/null && DELAY="$D"
+			echo "`date`: Delay requested... ${DELAY}sec"
+			sleep ${DELAY}
+			echo "`date`: Done sleeping"
+		fi
+
+		if [ -f /etc/zfs/noimport-dcpool ]; then
+			echo "`date`: /etc/zfs/noimport-dcpool block-file reappeared. Aborting."
+			exit 0
+		fi
+
+		[ -d /dcpool/export -o -f /etc/zfs/noimport-dcpool ] || \
+			( echo "`date`: beginning dcpool import..."
+			  time zpool import -o cachefile=none dcpool
+			  RET=$?
+			  echo "`date`: dcpool import complete ($RET)"
+			  exit $RET )
+		;;
+	stop)
+		[ ! -d /dcpool/export ] || \
+			time zpool export dcpool || \
+			while ! time zpool export -f dcpool; do sleep 1; done
+		;;
+esac
+
