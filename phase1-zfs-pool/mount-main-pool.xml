@@ -11,6 +11,8 @@
     <dependency name='noimport-file-auto' grouping='exclude_all' restart_on='none' type='path'>
       <service_fmri value='file://localhost/etc/zfs/.autolock.pool'/>
     </dependency>
+<!-- SETUP: Note that not all of your zones or file services might depend
+     on all of your pools -- amend the following lines appropriately -->
     <dependent name='mainpool_zones' grouping='require_all' restart_on='restart'>
 	<service_fmri value='svc:/system/zones'/>
     </dependent>
@@ -25,6 +27,7 @@
       </property_group>
       <template>
         <common_name>
+<!-- SETUP: Comment here corresponding to your pool purposes -->
           <loctext xml:lang='C'>import &apos;main data pool&apos; (local)</loctext>
         </common_name>
       </template>
