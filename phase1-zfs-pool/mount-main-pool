@@ -14,7 +14,8 @@ TESTMNT="$POOL/tmp"
 
 ### Pool import may be off-set to avoid conflicts
 POOL_ALTROOT="/"
-### The "-N" option to skip auto-mounting and -R for altrool are enforced
+### The "-N" option to skip auto-mounting and -R for altroot and
+### -o cachefile="$CACHE_FILE" are enforced
 POOL_OPTIONS=""
 
 ### Note: By default the service will delay import of the pool by 10 min
@@ -23,6 +24,8 @@ POOL_OPTIONS=""
 DELAY=600
 #DELAY=0
 set_poolfiles() {
+	#CACHE_FILE="/etc/zfs/zpool.cache.${POOL}"
+	CACHE_FILE="none"
 	DELAY_FILE="/etc/zfs/delay.${POOL}"
 	LOCK_USER="/etc/zfs/noimport-${POOL}"
 	LOCK_AUTO="/etc/zfs/.autolock.${POOL}"
@@ -40,6 +43,9 @@ case "$1" in
 		if [ ! -d "${POOL_ALTROOT}/${TESTMNT}" ]; then
 			if [ x"$2" != xnow -a -s "$LOCK_AUTO" ]; then
 				echo "ERROR: Earlier attempt to import '${POOL}' failed. Remove the lock-file '$LOCK_AUTO' to retry!" >&2
+				if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
+					echo "...and possibly remove the '${CACHE_FILE}' if it is also offending!" >&2
+				fi
 				exit 95
 			fi
 
@@ -67,7 +73,7 @@ case "$1" in
 
 			touch "$LOCK_AUTO"
 			echo "=== Importing '${POOL}'..."
-			time zpool import -R "${POOL_ALTROOT}" -N $POOL_OPTIONS "${POOL}"
+			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
 			RET=$?
 			
 			if [ x"$RET" = x0 ]; then
@@ -93,6 +99,10 @@ case "$1" in
 		;;
 	stop)
 		if [ -d "${POOL_ALTROOT}/${TESTMNT}" -o x"$2" = xnow ]; then
+			CACHE_FILE_BACKED_UP=no
+			if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
+				cp -pf "${CACHE_FILE}" "${CACHE_FILE}.bak" && CACHE_FILE_BACKED_UP=yes
+			fi
 			time zpool export "${POOL}" || \
 			( RET=1; while [ $RET != 0 ]; do
 			  echo "=== `date`: Forcefully exporting '$POOL'" >&2
@@ -101,6 +111,15 @@ case "$1" in
 			  echo "=== `date`: Result: $RET"
 			  sleep 1
 			done )
+			if [ $? = 0 ] && [ "$CACHE_FILE_BACKED_UP" = yes ] ; then
+				if [ -s "${CACHE_FILE}" ] && \
+				   diff "${CACHE_FILE}" "${CACHE_FILE}.bak" > /dev/null  2>/dev/null \
+				; then : ; else
+					echo "=== Restoring custom cache file: ${CACHE_FILE}"
+					cp -pf "${CACHE_FILE}.bak" "${CACHE_FILE}" \
+					|| { echo "=== Failed to restore custom cache file: ${CACHE_FILE}, trying to remove it then" >&2; rm -f "${CACHE_FILE}"; }
+				fi
+			fi
 		fi
 		;;
 	status)
