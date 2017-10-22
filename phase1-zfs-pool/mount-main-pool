@@ -3,8 +3,23 @@
 ### This method script wraps the import of a ZFS pool as an SMF service
 ### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
 
-### SETUP: First of all, customize this value
-POOL="pool"
+### SETUP: First of all, customize this value if you are using the simple
+### default instance of the wrapping service. Otherwise, instance name of
+### the service will be used instead (e.g. if you have many pools to wrap)
+DEFAULT_POOL_NAME="pool"
+
+SMF_BASE=""
+INSTANCE=""
+if [ -n "$SMF_FMRI" ] ; then
+	SMF_BASE="$( echo "$SMF_FMRI" | sed 's/^\(.*\:.*\)\(\:.*\)$/\1/' )"
+	INSTANCE="$( echo "$SMF_FMRI" | cut -d: -f3 )"
+fi
+
+if [ -z "$INSTANCE" ] || [ "$INSTANCE" = default ]; then
+    POOL="${DEFAULT_POOL_NAME}"
+else
+    POOL="$INSTANCE"
+fi
 
 ### SETUP: Create a dataset that would exist just to be probed after mount
 ### so the script can quickly verify the pool was mounted and do so without
