@@ -3,16 +3,23 @@
 ### This method script wraps the import of a ZFS pool as an SMF service
 ### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
 
+### SETUP: First of all, customize this value
 POOL="pool"
+
+### SETUP: Create a dataset that would exist just to be probed after mount
+### so the script can quickly verify the pool was mounted and do so without
+### calling `zfs` or `zpool` or `df` which might freeze if something went bad.
+### You can leave the default value below, but see and follow the comments
+### below about actually creating and securing this mountpoint.
 TESTMNT="$POOL/tmp"
 
-### Protect the pool's base mountpoint from trash (while the pool is
+### SETUP: Protect the pool's base mountpoint from trash (while the pool is
 ### exported!!!) with the following command (introduced after Solaris 10):
 # /bin/chmod S+ci /${POOL}
-### Create the test dataset with name mathching the mountpoint:
+### SETUP: Create the test dataset with name mathching the mountpoint:
 # zfs create -o canmount=on -o mountpoint=/${TESTMNT} ${TESTMNT}
 
-### Pool import may be off-set to avoid conflicts
+### SETUP (optional): Pool import may be off-set to avoid conflicts
 POOL_ALTROOT="/"
 ### The "-N" option to skip auto-mounting and -R for altroot and
 ### -o cachefile="$CACHE_FILE" are enforced
@@ -24,12 +31,20 @@ POOL_OPTIONS=""
 DELAY=600
 #DELAY=0
 set_poolfiles() {
+	### SETUP: You can populate the following files on your rpool/rootfs
+	### to manage import of secondary pools - including disabling the
+	### import if they are currently broken and cause problems.
+	### TODO: For legacy reasons, separator (dash or dot) varies here.
 	#CACHE_FILE="/etc/zfs/zpool.cache.${POOL}"
 	CACHE_FILE="none"
 	DELAY_FILE="/etc/zfs/delay.${POOL}"
 	LOCK_USER="/etc/zfs/noimport-${POOL}"
-	LOCK_AUTO="/etc/zfs/.autolock.${POOL}"
 	NOMOUNT_FILE="/etc/zfs/noautomount-${POOL}"
+
+	### This file is created by the script before attempting to import
+	### the pool and is cleared after successful self-check. If it is
+	### already present during startup, apparently something is broken.
+	LOCK_AUTO="/etc/zfs/.autolock.${POOL}"
 }
 
 ### TODO: Include the SMF logic if SMF_FMRI is defined, and use svcprop
@@ -134,4 +149,3 @@ case "$1" in
 		df -k "${POOL}"
 		;;
 esac
-
