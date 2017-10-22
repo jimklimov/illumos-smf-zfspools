@@ -1,13 +1,13 @@
 #!/sbin/sh
 
 ### This method script wraps the import of a ZFS pool as an SMF service
-### Copyright (C) 2010-2013 by Jim Klimov
+### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
 
 POOL="pool"
 TESTMNT="$POOL/tmp"
 
-### Protect the pool's base mountpoint from trash (while the pool
-### is exported!!!) with:
+### Protect the pool's base mountpoint from trash (while the pool is
+### exported!!!) with the following command (introduced after Solaris 10):
 # /bin/chmod S+ci /${POOL}
 ### Create the test dataset with name mathching the mountpoint:
 # zfs create -o canmount=on -o mountpoint=/${TESTMNT} ${TESTMNT}
@@ -17,7 +17,11 @@ POOL_ALTROOT="/"
 ### The "-N" option to skip auto-mounting and -R for altrool are enforced
 POOL_OPTIONS=""
 
+### Note: By default the service will delay import of the pool by 10 min
+### after system startup, so you have a chance to cancel it if it breaks
+### your system due to e.g. corruption.
 DELAY=600
+#DELAY=0
 set_poolfiles() {
 	DELAY_FILE="/etc/zfs/delay.${POOL}"
 	LOCK_USER="/etc/zfs/noimport-${POOL}"
