@@ -1,8 +1,13 @@
 #!/bin/sh
 
+### This method script wraps the startup of an iSCSI initiator (client)
+### in this system, imposing a bit of delay for things to settle in this
+### variant of an SMF service. No setup intended otherwise.
+### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
+
 case "$1" in
 	start) /lib/svc/method/iscsi-initiator "$@" && sleep 10 ;;
 	stop)  sleep 10 && /lib/svc/method/iscsi-initiator "$@" ;;
 	*) /lib/svc/method/iscsi-initiator "$@" ;;
 esac
-	
+

@@ -1,5 +1,12 @@
 #!/bin/sh
 
+### This method script wraps serving a ZVOL over iSCSI as an SMF service
+### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
+
+### SETUP: Configure *your* ZFS-volume path (zvol which you serve, where
+### some blob of data is defined by client (initiator) such as a ZFS pool
+### or a database tablespace or a VM image is stored), and the GUID of
+### your iSCSI target.
 ZVOL=/dev/zvol/rdsk/pool/dcpool
 GUID=600144f09844cf0000004d8376ae0002
 
@@ -15,4 +22,4 @@ case "$1" in
 		;;
 	*) exit 1 ;;
 esac
-	
+

@@ -1,5 +1,12 @@
 #!/bin/sh
 
+### This method script wraps the import of a ZFS pool as an SMF service.
+### Technically, it is an early version of phase1 "mount-main-pool" script,
+### the difference is in the SMF service manifest that accompanies this one
+### to define dependency on iSCSI initiator, so startup/shutdown are better
+### ordered with regard to networking.
+### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
+
 DELAY=600
 
 case "$1" in
