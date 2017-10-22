@@ -46,6 +46,10 @@ case "$1" in
 			if [ x"$2" != xnow -a -f "${DELAY_FILE}" ]; then
 				D="`head -1 ${DELAY_FILE}`"
 				[ "$D" -gt 0 ] 2>/dev/null && DELAY="$D"
+				unset D
+			fi
+
+			if [ x"$2" != xnow -a "${DELAY}" -gt 0 ]; then
 				echo "`date`: Delay requested... ${DELAY}sec"
 				sleep ${DELAY}
 				echo "`date`: Done sleeping"
