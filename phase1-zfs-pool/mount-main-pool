@@ -43,8 +43,15 @@ POOL_OPTIONS=""
 ### Note: By default the service will delay import of the pool by 10 min
 ### after system startup, so you have a chance to cancel it if it breaks
 ### your system due to e.g. corruption.
+### SETUP: Take care to use considerably different delays for different
+### pools, essentially so you don't run many 'zfs mount -a' in parallel,
+### confusing each other.
 DELAY=600
 #DELAY=0
+
+### NO-SETUP: This value should be same in all invocations of the script
+LOCK_ZFSMOUNTER="/var/run/zfs-smf-mount.lock"
+
 set_poolfiles() {
 	### SETUP: You can populate the following files on your rpool/rootfs
 	### to manage import of secondary pools - including disabling the
@@ -124,8 +131,14 @@ case "$1" in
 					echo "=== Try to mount the test dataset '$TESTMNT':"
 					time zfs mount "${TESTMNT}" || RET=$?
 				else
+					[ -s "$LOCK_ZFSMOUNTER" ] && echo "=== Waiting for LOCK_ZFSMOUNTER='$LOCK_ZFSMOUNTER' to get released..."
+					while [ -s "$LOCK_ZFSMOUNTER" ] ; do
+						sleep 5
+					done
+					echo "$$" > "$LOCK_ZFSMOUNTER"
 					echo "=== zfs mount -a ..."
 					time zfs mount -a || RET=$?
+					rm -f "$LOCK_ZFSMOUNTER"
 				fi
 			fi
 
