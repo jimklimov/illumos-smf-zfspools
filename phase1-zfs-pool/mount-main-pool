@@ -101,6 +101,12 @@ case "$1" in
 				exit 0
 			fi
 
+			if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}.bak" ] && [ ! -s "${CACHE_FILE}" ]; then
+				echo "=== Restoring custom cache file from backup: ${CACHE_FILE}"
+				cp -pf "${CACHE_FILE}.bak" "${CACHE_FILE}" \
+				|| { echo "=== Failed to restore custom cache file: ${CACHE_FILE}, trying to remove it then" >&2; rm -f "${CACHE_FILE}"; }
+			fi
+
 			touch "$LOCK_AUTO"
 			echo "=== Importing '${POOL}'..."
 			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
