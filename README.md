@@ -5,10 +5,12 @@ http://wiki.openindiana.org/oi/Advanced+-+ZFS+Pools+as+SMF+services+and+iSCSI+lo
 NOTE: Currently the SMF method scripts and manifests presented here are
 considered templates. Some manual chiseling work is expected from the
 user to tune these for realities of a particular system. See the Wiki
-article for more details.
+article or the scripts' sources for more details.
 
 Generally users only interested in making a ZFS pool an SMF instance
-should only fetch the resources from `phase1-zfs-pool` directory.
+should only fetch the resources from `phase1-zfs-pool` directory, then
+update paths and pool names and follow other suggestions commented in
+the script.
 
 Scripts here are kept not-executable to remind that they need to be
 manually tuned first.
