@@ -37,13 +37,13 @@ set_poolfiles
 
 case "$1" in
 	start)
-		if [ ! -d ${POOL_ALTROOT}/${TESTMNT} ]; then
+		if [ ! -d "${POOL_ALTROOT}/${TESTMNT}" ]; then
 			if [ x"$2" != xnow -a -s "$LOCK_AUTO" ]; then
 				echo "ERROR: Earlier attempt to import '${POOL}' failed. Remove the lock-file '$LOCK_AUTO' to retry!" >&2
 				exit 95
 			fi
 
-			if [ x"$2" != xnow -a -f ${DELAY_FILE} ]; then
+			if [ x"$2" != xnow -a -f "${DELAY_FILE}" ]; then
 				D="`head -1 ${DELAY_FILE}`"
 				[ "$D" -gt 0 ] 2>/dev/null && DELAY="$D"
 				echo "`date`: Delay requested... ${DELAY}sec"
@@ -51,30 +51,30 @@ case "$1" in
 				echo "`date`: Done sleeping"
 			fi
 
-			if [ x"$2" != xnow -a -f ${LOCK_USER} ]; then
+			if [ x"$2" != xnow -a -f "${LOCK_USER}" ]; then
 				echo "`date`: '${LOCK_USER}' block-file reappeared. Aborting."
 				exit 0
 			fi
 
-			if [ x"$2" != xnow -a -d ${POOL_ALTROOT}/${TESTMNT} ]; then
+			if [ x"$2" != xnow -a -d "${POOL_ALTROOT}/${TESTMNT}" ]; then
 				echo "`date`: pool '${POOL}' seems already mounted. Aborting."
 				exit 0
 			fi
 
 			touch "$LOCK_AUTO"
 			echo "=== Importing '${POOL}'..."
-			time zpool import -R ${POOL_ALTROOT} -N $POOL_OPTIONS ${POOL}
+			time zpool import -R "${POOL_ALTROOT}" -N $POOL_OPTIONS "${POOL}"
 			RET=$?
 			
 			if [ x"$RET" = x0 ]; then
 				echo "=== Some stats ..."
-				time zpool list ${POOL} && \
-				time zpool iostat -v ${POOL} && \
-				time zpool status -v ${POOL} && \
+				time zpool list "${POOL}" && \
+				time zpool iostat -v "${POOL}" && \
+				time zpool status -v "${POOL}" && \
 				if [ -f ${NOMOUNT_FILE} ]; then
 					echo "=== Not mounting ALL of '$POOL' datasets due to '$NOMOUNT_FILE'"
 					echo "=== Mounting root DS only:"
-					time zfs mount ${POOL}
+					time zfs mount "${POOL}"
 					echo "=== Try to mount the test dataset '$TESTMNT':"
 					time zfs mount ${TESTMNT}
 				else
@@ -88,11 +88,11 @@ case "$1" in
 		fi
 		;;
 	stop)
-		if [ -d ${POOL_ALTROOT}/${TESTMNT} -o x"$2" = xnow ]; then
-			time zpool export ${POOL} || \
+		if [ -d "${POOL_ALTROOT}/${TESTMNT}" -o x"$2" = xnow ]; then
+			time zpool export "${POOL}" || \
 			( RET=1; while [ $RET != 0 ]; do
 			  echo "=== `date`: Forcefully exporting '$POOL'" >&2
-			  time zpool export -f ${POOL}
+			  time zpool export -f "${POOL}"
 			  RET=$?
 			  echo "=== `date`: Result: $RET"
 			  sleep 1
@@ -101,14 +101,14 @@ case "$1" in
 		;;
 	status)
 		echo "=== Status for pool '$POOL' with test dataset '$TESTMNT':"
-		[ -d ${POOL_ALTROOT}/${TESTMNT} ] && M=YES || M=NO
+		[ -d "${POOL_ALTROOT}/${TESTMNT}" ] && M=YES || M=NO
 		echo "=== Imported and mounted = $M"
 
 		echo "=== ZFS info:"
-		time zpool list ${POOL} && \
-		time zpool iostat -v ${POOL} && \
-		time zpool status -v ${POOL} && \
-		df -k ${POOL}
+		time zpool list "${POOL}" && \
+		time zpool iostat -v "${POOL}" && \
+		time zpool status -v "${POOL}" && \
+		df -k "${POOL}"
 		;;
 esac
 
