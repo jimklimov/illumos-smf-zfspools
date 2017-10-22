@@ -120,12 +120,12 @@ case "$1" in
 				if [ -f "${NOMOUNT_FILE}" ]; then
 					echo "=== Not mounting ALL of '$POOL' datasets due to '$NOMOUNT_FILE'"
 					echo "=== Mounting root DS only:"
-					time zfs mount "${POOL}"
+					time zfs mount "${POOL}" || RET=$?
 					echo "=== Try to mount the test dataset '$TESTMNT':"
-					time zfs mount "${TESTMNT}"
+					time zfs mount "${TESTMNT}" || RET=$?
 				else
 					echo "=== zfs mount -a ..."
-					time zfs mount -a
+					time zfs mount -a || RET=$?
 				fi
 			fi
 
