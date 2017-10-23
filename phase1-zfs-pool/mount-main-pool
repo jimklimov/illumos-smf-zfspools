@@ -115,7 +115,7 @@ case "$1" in
 			fi
 
 			touch "$LOCK_AUTO"
-			echo "=== Importing '${POOL}'..."
+			echo "=== Importing '${POOL}'..." | tee -a /dev/console
 			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
 			RET=$?
 			
@@ -140,7 +140,7 @@ case "$1" in
 					time zfs mount -a || RET=$?
 					rm -f "$LOCK_ZFSMOUNTER"
 				fi
-			fi
+			fi | tee -a /dev/console
 
 			rm -f "$LOCK_AUTO"
 			exit ${RET}
@@ -169,7 +169,7 @@ case "$1" in
 					|| { echo "=== Failed to restore custom cache file: ${CACHE_FILE}, trying to remove it then" >&2; rm -f "${CACHE_FILE}"; }
 				fi
 			fi
-		fi
+		fi | tee -a /dev/console
 		;;
 	status)
 		echo "=== Status for pool '$POOL' with test dataset '$TESTMNT':"
