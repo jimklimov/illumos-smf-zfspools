@@ -11,8 +11,8 @@ DEFAULT_POOL_NAME="pool"
 SMF_BASE=""
 INSTANCE=""
 if [ -n "$SMF_FMRI" ] ; then
-	SMF_BASE="$( echo "$SMF_FMRI" | sed 's/^\(.*\:.*\)\(\:.*\)$/\1/' )"
-	INSTANCE="$( echo "$SMF_FMRI" | cut -d: -f3 )"
+	SMF_BASE="`echo "$SMF_FMRI" | sed 's/^\(.*\:.*\)\(\:.*\)$/\1/'`"
+	INSTANCE="`echo "$SMF_FMRI" | cut -d: -f3`"
 fi
 
 if [ -z "$INSTANCE" ] || [ "$INSTANCE" = default ]; then
