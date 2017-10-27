@@ -75,9 +75,23 @@ set_poolfiles() {
 
 set_poolfiles
 
+is_mounted() {
+    IS_MOUNTED=no
+    TEST_MPT="`echo "${POOL_ALTROOT}/${TESTMNT}" | sed 's,//,/,g'`"
+    TEST_MPT2="`echo "${POOL_ALTROOT}/${POOL}" | sed 's,//,/,g'`"
+    [ -d "${TEST_MPT}" ] && [ -d "${TEST_MPT2}" ] \
+    && ( /sbin/mount | egrep "^${TEST_MPT} on ${POOL}/" ) \
+    && ( /sbin/mount | egrep "^${TEST_MPT2} on ${POOL} " ) \
+    &&   IS_MOUNTED=yes \
+    &&   return 0
+    return 1
+}
+
+is_mounted && echo "NOTE: Dataset ${TEST_MPT} under ${POOL} is currently mounted" >&2 | tee -a /dev/console
+
 case "$1" in
 	start)
-		if [ ! -d "${POOL_ALTROOT}/${TESTMNT}" ]; then
+		if is_mounted ; then : ; else
 			if [ x"$2" != xnow -a -s "$LOCK_AUTO" ]; then
 				echo "ERROR: Earlier attempt to import '${POOL}' failed. Remove the lock-file '$LOCK_AUTO' to retry!" >&2
 				if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
@@ -103,7 +117,7 @@ case "$1" in
 				exit 0
 			fi
 
-			if [ x"$2" != xnow -a -d "${POOL_ALTROOT}/${TESTMNT}" ]; then
+			if [ x"$2" != xnow ] && is_mounted ; then
 				echo "`date`: pool '${POOL}' seems already mounted. Aborting."
 				exit 0
 			fi
@@ -147,7 +161,7 @@ case "$1" in
 		fi
 		;;
 	stop)
-		if [ -d "${POOL_ALTROOT}/${TESTMNT}" -o x"$2" = xnow ]; then
+		if is_mounted || [ x"$2" = xnow ]; then
 			CACHE_FILE_BACKED_UP=no
 			if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
 				cp -pf "${CACHE_FILE}" "${CACHE_FILE}.bak" && CACHE_FILE_BACKED_UP=yes
@@ -173,7 +187,7 @@ case "$1" in
 		;;
 	status)
 		echo "=== Status for pool '$POOL' with test dataset '$TESTMNT':"
-		[ -d "${POOL_ALTROOT}/${TESTMNT}" ] && M=YES || M=NO
+		is_mounted && M=YES || M=NO
 		echo "=== Imported and mounted = $M"
 
 		echo "=== ZFS info:"
