@@ -116,7 +116,7 @@ case "$1" in
 
 			if [ x"$2" != xnow -a -f "${LOCK_USER}" ]; then
 				echo "`date`: '${LOCK_USER}' block-file reappeared. Aborting."
-				exit 0
+				exit 96
 			fi
 
 			if [ x"$2" != xnow ] && is_mounted && [ ! -f "$FULL_RETRY" ]; then
