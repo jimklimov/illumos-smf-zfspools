@@ -132,30 +132,31 @@ case "$1" in
 			echo "=== Importing '${POOL}'..." | tee -a /dev/console
 			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
 			RET=$?
-			
+
 			if [ x"$RET" = x0 ]; then
 				echo "=== Some stats ..."
 				time zpool list "${POOL}" && \
 				time zpool iostat -v "${POOL}" && \
 				time zpool status -v "${POOL}" && \
 				if [ -f "${NOMOUNT_FILE}" ]; then
-					echo "=== Not mounting ALL of '$POOL' datasets due to '$NOMOUNT_FILE'"
-					echo "=== Mounting root DS only:"
+					echo "=== Not mounting ALL of '$POOL' datasets due to '$NOMOUNT_FILE'" | tee -a /dev/console
+					echo "=== Mounting root DS only:" | tee -a /dev/console
 					time zfs mount "${POOL}" || RET=$?
-					echo "=== Try to mount the test dataset '$TESTMNT':"
+					echo "=== Try to mount the test dataset '$TESTMNT':" | tee -a /dev/console
 					time zfs mount "${TESTMNT}" || RET=$?
 				else
-					[ -s "$LOCK_ZFSMOUNTER" ] && echo "=== Waiting for LOCK_ZFSMOUNTER='$LOCK_ZFSMOUNTER' to get released..."
+					[ -s "$LOCK_ZFSMOUNTER" ] && echo "=== Waiting for LOCK_ZFSMOUNTER='$LOCK_ZFSMOUNTER' to get released..." | tee -a /dev/console
 					while [ -s "$LOCK_ZFSMOUNTER" ] ; do
 						sleep 5
 					done
 					echo "$$" > "$LOCK_ZFSMOUNTER"
-					echo "=== zfs mount -a ..."
+					echo "=== zfs mount -a due to pool $POOL ..." | tee -a /dev/console
 					time zfs mount -a || RET=$?
 					rm -f "$LOCK_ZFSMOUNTER"
 				fi
-			fi | tee -a /dev/console
+			fi
 
+			echo "=== Pool ${POOL} import completed with exit-code $RET" | tee -a /dev/console
 			rm -f "$LOCK_AUTO"
 			exit ${RET}
 		fi
