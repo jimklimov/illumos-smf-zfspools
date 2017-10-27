@@ -131,9 +131,12 @@ case "$1" in
 			fi
 
 			touch "$LOCK_AUTO" "$FULL_RETRY"
-			echo "=== Importing '${POOL}'..." | tee -a /dev/console
-			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
-			RET=$?
+			RET=0
+			if is_mounted ; then : ; else
+				echo "=== Importing '${POOL}'..." | tee -a /dev/console
+				time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
+				RET=$?
+			fi
 
 			if [ x"$RET" = x0 ]; then
 				echo "=== Some stats ..."
