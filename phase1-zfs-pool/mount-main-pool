@@ -67,6 +67,8 @@ set_poolfiles() {
 	### the pool and is cleared after successful self-check. If it is
 	### already present during startup, apparently something is broken.
 	LOCK_AUTO="/etc/zfs/.autolock.${POOL}"
+
+	FULL_RETRY="/var/run/zfs-smf-mount.${POOL}.mustretry"
 }
 
 ### TODO: Include the SMF logic if SMF_FMRI is defined, and use svcprop
@@ -91,7 +93,7 @@ is_mounted && echo "NOTE: Dataset ${TEST_MPT} under ${POOL} is currently mounted
 
 case "$1" in
 	start)
-		if is_mounted ; then : ; else
+		if is_mounted && [ ! -f "$FULL_RETRY" ] ; then : ; else
 			if [ x"$2" != xnow -a -s "$LOCK_AUTO" ]; then
 				echo "ERROR: Earlier attempt to import '${POOL}' failed. Remove the lock-file '$LOCK_AUTO' to retry!" >&2
 				if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
@@ -117,7 +119,7 @@ case "$1" in
 				exit 0
 			fi
 
-			if [ x"$2" != xnow ] && is_mounted ; then
+			if [ x"$2" != xnow ] && is_mounted && [ ! -f "$FULL_RETRY" ]; then
 				echo "`date`: pool '${POOL}' seems already mounted. Aborting."
 				exit 0
 			fi
@@ -128,7 +130,7 @@ case "$1" in
 				|| { echo "=== Failed to restore custom cache file: ${CACHE_FILE}, trying to remove it then" >&2; rm -f "${CACHE_FILE}"; }
 			fi
 
-			touch "$LOCK_AUTO"
+			touch "$LOCK_AUTO" "$FULL_RETRY"
 			echo "=== Importing '${POOL}'..." | tee -a /dev/console
 			time zpool import -R "${POOL_ALTROOT}" -o cachefile="${CACHE_FILE}" -N $POOL_OPTIONS "${POOL}"
 			RET=$?
@@ -158,6 +160,7 @@ case "$1" in
 
 			echo "=== Pool ${POOL} import completed with exit-code $RET" | tee -a /dev/console
 			rm -f "$LOCK_AUTO"
+			[ "$RET" = 0 ] && rm -f "$FULL_RETRY"
 			exit ${RET}
 		fi
 		;;
