@@ -168,9 +168,15 @@ case "$1" in
 # etc. ones exist in the tree, ultimately mounting child datasets
 # before their parents and so precluding the parents from mounting
 # (due to a not-empty mountpoint).
+# Pick datasets we can mount, sort by mountpoint order...
 					###time zfs mount -a || RET=$?
-					zfs list -ocanmount,zoned,mountpoint,name -r "${POOL}" | egrep '^ *on *off' | grep -vw legacy | sort -k2,2 | awk '{print $2"\t"$NF}' | \
-						( RET=0; while read PM PD ; do zfs mount "$PD" || RET=$? ; done ; exit $RET ) || RET=$?
+					zfs list -ocanmount,zoned,mountpoint,name -r "${POOL}" \
+					| egrep '^ *on *off' | grep -vw legacy \
+					| sort -k3,3 | awk '{print $3"\t"$NF}' \
+					| ( RET=0; while read PM PD ; do
+							zfs mount "$PD" || RET=$?
+						done ; exit $RET
+					  ) || RET=$?
 					rm -f "$LOCK_ZFSMOUNTER"
 				fi
 			fi
