@@ -16,9 +16,9 @@ if [ -n "$SMF_FMRI" ] ; then
 fi
 
 if [ -z "$INSTANCE" ] || [ "$INSTANCE" = default ]; then
-    POOL="${DEFAULT_POOL_NAME}"
+	POOL="${DEFAULT_POOL_NAME}"
 else
-    POOL="$INSTANCE"
+	POOL="$INSTANCE"
 fi
 
 ### SETUP: Create a dataset that would exist just to be probed after mount
@@ -78,15 +78,15 @@ set_poolfiles() {
 set_poolfiles
 
 is_mounted() {
-    IS_MOUNTED=no
-    TEST_MPT="`echo "${POOL_ALTROOT}/${TESTMNT}" | sed 's,//,/,g'`"
-    TEST_MPT2="`echo "${POOL_ALTROOT}/${POOL}" | sed 's,//,/,g'`"
-    [ -d "${TEST_MPT}" ] && [ -d "${TEST_MPT2}" ] \
-    && ( /sbin/mount | egrep "^${TEST_MPT} on ${POOL}/" ) \
-    && ( /sbin/mount | egrep "^${TEST_MPT2} on ${POOL} " ) \
-    &&   IS_MOUNTED=yes \
-    &&   return 0
-    return 1
+	IS_MOUNTED=no
+	TEST_MPT="`echo "${POOL_ALTROOT}/${TESTMNT}" | sed 's,//,/,g'`"
+	TEST_MPT2="`echo "${POOL_ALTROOT}/${POOL}" | sed 's,//,/,g'`"
+	[ -d "${TEST_MPT}" ] && [ -d "${TEST_MPT2}" ] \
+	&& ( /sbin/mount | egrep "^${TEST_MPT} on ${POOL}/" ) \
+	&& ( /sbin/mount | egrep "^${TEST_MPT2} on ${POOL} " ) \
+	&&   IS_MOUNTED=yes \
+	&&   return 0
+	return 1
 }
 
 is_mounted && echo "NOTE: Dataset ${TEST_MPT} under ${POOL} is currently mounted" >&2 | tee -a /dev/console
