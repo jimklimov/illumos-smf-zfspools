@@ -198,7 +198,7 @@ case "$1" in
 			# and so would remount the children still alive, and pollute the
 			# mountpoints for the next boot/import.
 			ZN="`zonename`" 2>/dev/null || ZN="this"
-			mount | awk '{print $3}' | egrep '^${POOL}/' | sort -r | while read D ; do
+			/sbin/mount | awk '{print $3}' | egrep "^${POOL}/" | sort -r | while read D ; do
 				{ umount "$D" || zfs umount "$D" || zfs umount -f "$D" ; } \
 				&& echo "Unmonted $D ok" \
 				|| echo "FAILED to unmount $D cleanly, maybe it is not in $ZN zone context" >&2
