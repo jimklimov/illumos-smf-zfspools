@@ -52,6 +52,13 @@ DELAY=600
 ### NO-SETUP: This value should be same in all invocations of the script
 LOCK_ZFSMOUNTER="/var/run/zfs-smf-mount.lock"
 
+### Standardize the environment
+TZ=UTC
+LANG=C
+LC_ALL=C
+export TZ LANG LC_ALL
+unset GREP_OPTIONS || true
+
 set_poolfiles() {
 	### SETUP: You can populate the following files on your rpool/rootfs
 	### to manage import of secondary pools - including disabling the
