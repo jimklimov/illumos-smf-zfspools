@@ -1,7 +1,7 @@
 #!/sbin/sh
 
 ### This method script wraps the import of a ZFS pool as an SMF service
-### Copyright (C) 2010-2017 by Jim Klimov, on the terms of CDDL license
+### Copyright (C) 2010-2019 by Jim Klimov, on the terms of CDDL license
 
 ### SETUP: First of all, customize this value if you are using the simple
 ### default instance of the wrapping service. Otherwise, instance name of
@@ -180,6 +180,16 @@ case "$1" in
 			if [ -n "${CACHE_FILE}" ] && [ x"${CACHE_FILE}" != xnone ] && [ -s "${CACHE_FILE}" ]; then
 				cp -pf "${CACHE_FILE}" "${CACHE_FILE}.bak" && CACHE_FILE_BACKED_UP=yes
 			fi
+			# Below we try to avoid the possibility (based on OS release/age)
+			# that the default zpool export would unmount datasets in parallel,
+			# and so would remount the children still alive, and pollute the
+			# mountpoints for the next boot/import.
+			ZN="`zonename`" 2>/dev/null || ZN="this"
+			mount | awk '{print $3}' | egrep '^${POOL}/' | sort -r | while read D ; do
+				{ umount "$D" || zfs umount "$D" || zfs umount -f "$D" ; } \
+				&& echo "Unmonted $D ok" \
+				|| echo "FAILED to unmount $D cleanly, maybe it is not in $ZN zone context" >&2
+			done
 			time zpool export "${POOL}" || \
 			( RET=1; while [ $RET != 0 ]; do
 			  echo "=== `date`: Forcefully exporting '$POOL'" >&2
