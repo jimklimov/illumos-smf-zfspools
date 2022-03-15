@@ -1,5 +1,9 @@
 # illumos-smf-zfspools
 ZFS pools as SMF services, as detailed in my article on OI Wiki
+backed up at
+https://web.archive.org/web/20200428053251/https://wiki.openindiana.org/oi/Advanced+-+ZFS+Pools+as+SMF+services+and+iSCSI+loopback+mounts
+or https://github.com/jimklimov/illumos-articles/blob/master/articles/Advanced%20-%20ZFS%20Pools%20as%20SMF%20services%20and%20iSCSI%20loopback%20mounts%20-%20OpenIndiana%20Wiki.mht?raw=true
+(as MHT archive, most browsers read that), and some time ago originally posted at
 http://wiki.openindiana.org/oi/Advanced+-+ZFS+Pools+as+SMF+services+and+iSCSI+loopback+mounts
 
 NOTE: Currently the SMF method scripts and manifests presented here are
