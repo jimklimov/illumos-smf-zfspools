@@ -19,5 +19,11 @@ the script.
 Scripts here are kept not-executable to remind that they need to be
 manually tuned first.
 
+For related trickery, please see also:
+
+* https://github.com/jimklimov/illumos-articles
+* https://github.com/jimklimov/illumos-splitroot-scripts
+* https://github.com/jimklimov/illumos-smf-zones
+
 Hope this helps,
 Jim Klimov
